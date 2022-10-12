@@ -29,7 +29,7 @@ public:
 			glm::vec3 p1 = glm::vec3(rayOrigin.x + d.x * (float)t1, rayOrigin.y + d.y * t1, rayOrigin.z + d.z * t1);
 			glm::vec3 p2 = glm::vec3(rayOrigin.x + d.x * (float)t2, rayOrigin.y + d.y * t2, rayOrigin.z + d.z * t2);
 
-			if(glm::distance(o, p1) > glm::distance(o, p2))
+			if(glm::distance(o, p1) < glm::distance(o, p2))
 			{
 				return p1;
 			}
