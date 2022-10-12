@@ -10,8 +10,9 @@ void CactusLayer::OnUIRender()
 {
     ImGui::Begin("Settings");
     ImGui::Text("Last render : %.3f ms", lastRenderTime);
-    glm::vec2 t = RTMath::SphereIntersection(glm::vec3(-4.0f, -8.0f, 0.f), glm::vec3(1.0f, 2.0f, 0.0f), 5.0f);
-    ImGui::Text("t1 : %.3f - t2 : %.3f", t.x, t.y);
+    glm::vec3 t = RTMath::SphereIntersection(glm::vec3(-4.0f, -8.0f, 0.f), glm::vec3(1.0f, 2.0f, 0.0f), 5.0f);
+    //glm::vec3 t = RTMath::SphereIntersection(glm::vec3(-3.0f, -3.0f, 0.f), glm::vec3(1.0f, 1.0f, 0.0f), 2.0f);
+    ImGui::Text("x : %.3f - y : %.3f - z : %.3f", t.x, t.y, t.z);
     if (ImGui::Button("Render"))
     {
         Render();
