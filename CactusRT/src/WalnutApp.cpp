@@ -2,7 +2,6 @@
 #include "Walnut/EntryPoint.h"
 
 #include "Walnut/Image.h"
-
 #include "CactusLayer.h"
 
 //class ExampleLayer : public Walnut::Layer
