@@ -1,10 +1,10 @@
 -- premake5.lua
-workspace "WalnutApp"
+workspace "CactusRT"
    architecture "x64"
    configurations { "Debug", "Release", "Dist" }
-   startproject "WalnutApp"
+   startproject "CactusRT"
 
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 include "WalnutExternal.lua"
-include "WalnutApp"
+include "CactusRT"
