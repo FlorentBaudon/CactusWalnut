@@ -5,9 +5,9 @@
 
 using namespace Walnut;
 
-CactusLayer::CactusLayer()
+CactusLayer::CactusLayer() : camera(45.f, 0.1f, 100.f), renderer()
 {
-    renderer = new Renderer();
+
 }
 
 void CactusLayer::OnUIRender()
@@ -26,7 +26,7 @@ void CactusLayer::OnUIRender()
     viewportWidth = ImGui::GetContentRegionAvail().x;
     viewportHeight = ImGui::GetContentRegionAvail().y;
 
-    auto image = renderer->getFinalImage();
+    auto image = renderer.getFinalImage();
     if (image)
         ImGui::Image(image->GetDescriptorSet(), { (float)image->GetWidth(), (float)image->GetHeight() },
             ImVec2(0,1), ImVec2(1,0) ); //Invert Y coordinate
@@ -37,12 +37,18 @@ void CactusLayer::OnUIRender()
     Render();
 }
 
+void CactusLayer::OnUpdate(float ts)
+{
+    camera.OnUpdate(ts);
+}
+
 void CactusLayer::Render()
 {
     Timer timer;
 
-    renderer->OnResize(viewportWidth, viewportHeight);
-    renderer->Render();
+    renderer.OnResize(viewportWidth, viewportHeight);
+    camera.OnResize(viewportWidth, viewportHeight);
+    renderer.Render(camera);
 
     lastRenderTime = timer.ElapsedMillis();
 }
