@@ -16,6 +16,7 @@ private:
     void Render();
 
     Renderer renderer;
+    Scene scene;
     Camera camera;
     uint32_t* imageData = nullptr;
     uint32_t viewportWidth = 0, viewportHeight = 0;

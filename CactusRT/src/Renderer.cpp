@@ -20,7 +20,7 @@ void Renderer::OnResize(uint32_t width, uint32_t height)
     imageData = new uint32_t[width * height];
 }
 
-void Renderer::Render(const Camera& camera)
+void Renderer::Render(const Scene& scene, const Camera& camera)
 {
     const glm::vec3 rayOrigin = camera.GetPosition();
 
@@ -33,7 +33,7 @@ void Renderer::Render(const Camera& camera)
         { 
             ray.direction = camera.GetRayDirections()[x + y * finalImage->GetWidth()];
             
-            glm::vec4 color = TraceRay(ray);
+            glm::vec4 color = TraceRay(scene, ray);
             color = glm::clamp(color, glm::vec4(0.0f), glm::vec4(1.0f));
             imageData[y * finalImage->GetWidth() + x] = Utils::ConvertToRGBA(color);
         }
@@ -43,29 +43,48 @@ void Renderer::Render(const Camera& camera)
 
 }
 
-glm::vec4 Renderer::TraceRay(const Ray& ray)
+glm::vec4 Renderer::TraceRay(const Scene& scene, const Ray& ray)
 {
-    glm::vec3 sphereColor(1, 0, 1);
-    glm::vec3 sphereOrigin(0.0f);
-    float sphereRadius = 1.f;
+    if (scene.spheres.size() == 0)
+        return glm::vec4(0, 0, 0, 1);
 
+    const Sphere* closestSphere = nullptr;
+    float hitDistance = FLT_MAX;
+    for (const Sphere& sphere : scene.spheres)
+    {
+
+        glm::vec3 origin = ray.origin - sphere.position;
+
+        const float a = glm::dot(ray.direction, ray.direction); //square each parameters it's like a dot product of vector on itself // if direction is normalize, we don't need the dot product because resultat == 1, BUT dot product is less expansive than normalise and lead to the same result
+        const float b = 2.f * glm::dot(origin, ray.direction);
+        const float c = glm::dot(origin, origin) - sphere.radius * sphere.radius;
+
+        const float delta = b * b - 4.f * a * c;
+
+        if (delta < 0.0f)
+            continue;
+
+        //float t1 = (-b + sqrt(delta)) / (2 * a);
+        float closestT = (-b - glm::sqrt(delta)) / (2 * a); //T2 always be the closest value
+
+        if (closestT < hitDistance)
+        {
+            hitDistance = closestT;
+            closestSphere = &sphere;
+        }
+    }
+
+    if (closestSphere == nullptr)
+        return glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+    glm::vec3 origin = ray.origin - closestSphere->position;
     glm::vec3 lightDirection = glm::normalize(glm::vec3(-1, -1, -1));
+    glm::vec3 sphereColor = closestSphere->albedo;
 
-    const float a = glm::dot(ray.direction, ray.direction); //square each parameters it's like a dot product of vector on itself // if direction is normalize, we don't need the dot product because resultat == 1, BUT dot product is less expansive than normalise and lead to the same result
-    const float b = 2.f * glm::dot(ray.origin, ray.direction);
-    const float c = glm::dot(ray.origin, ray.origin) - sphereRadius * sphereRadius;
 
-    const float delta = b*b - 4.f * a * c;
-
-    if (delta < 0.0f)
-        glm::vec4(0.f, 0.f, 0.f, 1.f);
-
-    //float t1 = (-b + sqrt(delta)) / (2 * a);
-    float t2 = (-b - glm::sqrt(delta)) / (2 * a); //T2 always be the closest value
-
-    glm::vec3 hitPoint = ray.origin + ray.direction * t2;
-    glm::vec3 normal = glm::normalize(hitPoint - sphereOrigin);
-    float angle = glm::max(glm::dot(hitPoint, -lightDirection), 0.0f);
+    glm::vec3 hitPoint = origin + ray.direction * hitDistance;
+    glm::vec3 normal = glm::normalize(hitPoint);// - closestSphere->position);
+    float angle = glm::max(glm::dot(normal, -lightDirection), 0.0f);
 
     sphereColor *= angle;
 
