@@ -10,11 +10,19 @@
 class Renderer
 {
 public :
+	struct Settings
+	{
+		bool accumulate = true;
+	};
+public :
 	Renderer() = default;
 
 	void Render(const Scene& scene, const Camera& camera);
 	void OnResize(uint32_t width, uint32_t height);
 	std::shared_ptr<Walnut::Image> getFinalImage() { return finalImage;  }
+
+	void ResetFrameIndex() { frameIndex = 1; }
+	Settings& GetSettings() { return settings; }
 
 private :
 	struct HitPayload
@@ -34,10 +42,16 @@ private :
 	
 //Members	
 private :
-	std::shared_ptr<Walnut::Image> finalImage;
-	uint32_t* imageData = nullptr;
 	const Scene* activeScene;
 	const Camera* activeCamera;
+
+	Settings settings;
+
+	std::shared_ptr<Walnut::Image> finalImage;
+	uint32_t* imageData = nullptr;
+	glm::vec4* accumulationData = nullptr;
+
+	uint32_t frameIndex = 1;
 
 };
 

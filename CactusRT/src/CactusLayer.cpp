@@ -38,8 +38,15 @@ void CactusLayer::OnUIRender()
     ImGui::Text("Last render : %.3f ms", lastRenderTime);
     if (ImGui::Button("Render"))
     {
-        //Render();
+        Render();
     }
+    ImGui::Checkbox("Accumulate", &renderer.GetSettings().accumulate);
+
+    if (ImGui::Button("Reset"))
+    {
+        renderer.ResetFrameIndex();
+    }
+
     ImGui::End();
 
     ImGui::Begin("Scene");
@@ -65,8 +72,8 @@ void CactusLayer::OnUIRender()
         
         Material& material = scene.materials[i];
         ImGui::ColorEdit3("Albedo", glm::value_ptr(material.Albedo), 0.1f);
-        ImGui::DragFloat("Roughness", &material.Roughness, 0.05f, 0.0f, 0.1f);
-        ImGui::DragFloat("Metallic", &material.Metallic, 0.05f, 0.0f, 0.1f);
+        ImGui::DragFloat("Roughness", &material.Roughness, 0.05f, 0.0f, 1.0f);
+        ImGui::DragFloat("Metallic", &material.Metallic, 0.05f, 0.0f, 1.0f);
 
         ImGui::Separator();
 
@@ -93,7 +100,10 @@ void CactusLayer::OnUIRender()
 
 void CactusLayer::OnUpdate(float ts)
 {
-    camera.OnUpdate(ts);
+    if(camera.OnUpdate(ts))
+    {
+        renderer.ResetFrameIndex();
+    }
 }
 
 void CactusLayer::Render()

@@ -19,6 +19,9 @@ void Renderer::OnResize(uint32_t width, uint32_t height)
 
     delete[] imageData;
     imageData = new uint32_t[width * height];
+
+    delete[] accumulationData;
+    accumulationData = new glm::vec4[width * height];
 }
 
 void Renderer::Render(const Scene& scene, const Camera& camera)
@@ -26,17 +29,32 @@ void Renderer::Render(const Scene& scene, const Camera& camera)
     this->activeScene = &scene;
     this->activeCamera = &camera;
 
+    //Reset accumulation buffer
+    if (frameIndex == 1)
+        memset(accumulationData, 0, finalImage->GetWidth() * finalImage->GetHeight() * sizeof(glm::vec4));
+
     for (uint32_t y = 0; y < finalImage->GetHeight(); y++) //we iterate with Y first to process pixels rows by rows and avoid memory jump
     {
         for (uint32_t x = 0; x < finalImage->GetWidth(); x++)
         {
             glm::vec4 color = PerPixel(x, y);
-            color = glm::clamp(color, glm::vec4(0.0f), glm::vec4(1.0f));
-            imageData[y * finalImage->GetWidth() + x] = Utils::ConvertToRGBA(color);
+
+            accumulationData[y * finalImage->GetWidth() + x] += color;
+
+            glm::vec4 accumulatedColor = accumulationData[y * finalImage->GetWidth() + x];
+            accumulatedColor /= (float)frameIndex;
+
+            accumulatedColor = glm::clamp(accumulatedColor, glm::vec4(0.0f), glm::vec4(1.0f));
+            imageData[y * finalImage->GetWidth() + x] = Utils::ConvertToRGBA(accumulatedColor);
         }
     }
 
     finalImage->SetData(imageData); //upload to GPU
+
+    if (settings.accumulate)
+        frameIndex++;
+    else
+        frameIndex = 1;
 
 }
 
