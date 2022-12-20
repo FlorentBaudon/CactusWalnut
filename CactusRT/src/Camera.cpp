@@ -24,7 +24,7 @@ bool Camera::OnUpdate(float ts)
 	if (!Input::IsMouseButtonDown(MouseButton::Right))
 	{
 		Input::SetCursorMode(CursorMode::Normal);
-		return;
+		return false;
 	}
 
 	Input::SetCursorMode(CursorMode::Locked);

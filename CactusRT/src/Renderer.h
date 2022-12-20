@@ -42,10 +42,12 @@ private :
 	
 //Members	
 private :
-	const Scene* activeScene;
-	const Camera* activeCamera;
+	const Scene* activeScene = nullptr;
+	const Camera* activeCamera = nullptr;
 
 	Settings settings;
+
+	std::vector<uint32_t> imageHorizontalIterator, imageVerticalIterator;
 
 	std::shared_ptr<Walnut::Image> finalImage;
 	uint32_t* imageData = nullptr;

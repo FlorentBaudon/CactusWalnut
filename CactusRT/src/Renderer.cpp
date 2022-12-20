@@ -2,6 +2,8 @@
 #include "Utils.h"
 #include "Walnut/Random.h"
 
+#include <execution>
+
 void Renderer::OnResize(uint32_t width, uint32_t height)
 {
     if (finalImage)
@@ -22,6 +24,18 @@ void Renderer::OnResize(uint32_t width, uint32_t height)
 
     delete[] accumulationData;
     accumulationData = new glm::vec4[width * height];
+
+    imageHorizontalIterator.resize(width);
+    imageVerticalIterator.resize(height);
+
+    for (uint32_t i = 0; i < width; i++)
+    {
+        imageHorizontalIterator[i] = i;
+    }
+    for (uint32_t i = 0; i < height; i++)
+    {
+        imageVerticalIterator[i] = i;
+    }
 }
 
 void Renderer::Render(const Scene& scene, const Camera& camera)
@@ -32,7 +46,28 @@ void Renderer::Render(const Scene& scene, const Camera& camera)
     //Reset accumulation buffer
     if (frameIndex == 1)
         memset(accumulationData, 0, finalImage->GetWidth() * finalImage->GetHeight() * sizeof(glm::vec4));
+#define MT 1
+#if MT
+    //Multithreaded 
+    std::for_each(std::execution::par, imageVerticalIterator.begin(), imageVerticalIterator.end(), 
+        [this](uint32_t y)
+        {
+            std::for_each(imageHorizontalIterator.begin(), imageHorizontalIterator.end(),
+                [this, y](uint32_t x)
+                {
+                    glm::vec4 color = PerPixel(x, y);
 
+                    accumulationData[y * finalImage->GetWidth() + x] += color;
+
+                    glm::vec4 accumulatedColor = accumulationData[y * finalImage->GetWidth() + x];
+                    accumulatedColor /= (float)frameIndex;
+
+                    accumulatedColor = glm::clamp(accumulatedColor, glm::vec4(0.0f), glm::vec4(1.0f));
+                    imageData[y * finalImage->GetWidth() + x] = Utils::ConvertToRGBA(accumulatedColor);
+                });
+        });
+#else
+    //No multithreaded 
     for (uint32_t y = 0; y < finalImage->GetHeight(); y++) //we iterate with Y first to process pixels rows by rows and avoid memory jump
     {
         for (uint32_t x = 0; x < finalImage->GetWidth(); x++)
@@ -48,6 +83,7 @@ void Renderer::Render(const Scene& scene, const Camera& camera)
             imageData[y * finalImage->GetWidth() + x] = Utils::ConvertToRGBA(accumulatedColor);
         }
     }
+#endif
 
     finalImage->SetData(imageData); //upload to GPU
 
